@@ -1,6 +1,6 @@
 # [W.I.P]HuHoBot-PocketMineAdapter
-[![GitHub Release](https://img.shields.io/github/v/release/HuHoBot/BDSAdapter?style=for-the-badge)](https://github.com/HuHoBot/BDSAdapter/releases)
-[![License](https://img.shields.io/github/license/HuHoBot/BDSAdapter?style=for-the-badge)](https://github.com/HuHoBot/BDSAdapter/blob/main/LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/Sunch233/HuHoBot-PocketMineAdapter?style=for-the-badge)](https://github.com/Sunch233/HuHoBot-PocketMineAdapter/releases)
+[![License](https://img.shields.io/github/license/Sunch233/HuHoBot-PocketMineAdapter?style=for-the-badge)](https://github.com/Sunch233/HuHoBot-PocketMineAdapter/blob/main/LICENSE)
 
 专为PocketMine-MP设计的下一代基岩版服务器管理解决方案，提供安全的无第三方QQ机器人依赖管理体验。
 
