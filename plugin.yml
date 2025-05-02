@@ -1,0 +1,15 @@
+name: HuHoBot
+api: 5.0.0
+main: HuHoBot\Main
+author: Sunch233
+version: 0.0.1
+
+permissions:
+  HuHo.command.bind:
+    description: "HuHo Bot绑定群聊"
+    default: op
+commands:
+  bind:
+    permission: HuHo.command.bind
+    description: "HuHo Bot绑定群聊"
+    usage: /bind <code>

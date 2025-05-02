@@ -1,0 +1,13 @@
+---
+# 服务器唯一ID (启动时自动生成)
+# ! 请勿手动修改，留空即可
+serverId: ~
+# 通信加密密钥 (绑定后自动获取)
+# ! 请勿手动修改，留空即可
+hashKey: ~
+# 服务器显示名称
+serverName: PocketMine-MP Server
+# MOTD服务器地址
+# 格式: 地址:端口 (示例: play.easecation.net:19132)
+motdUrl: play.easecation.net:19132
+...
