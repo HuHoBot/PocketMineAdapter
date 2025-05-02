@@ -115,8 +115,8 @@ class Main extends PluginBase implements Listener {
 			'serverId' => $this->getConfig()->get('serverId'),
 			'hashKey' => $this->getConfig()->get('hashKey', null),
 			'name' => $this->getConfig()->get('serverName'),
-			'version' => $this->getDescription()->getVersion(),
-			'platform' => 'dev'
+			'version' => "1.0.0", //需要硬编码 //$this->getDescription()->getVersion(),
+			'platform' => 'pmmp'
 		]);
 	}
 
