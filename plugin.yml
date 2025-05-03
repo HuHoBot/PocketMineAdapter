@@ -2,7 +2,7 @@ name: HuHoBot
 api: 5.0.0
 main: HuHoBot\Main
 author: Sunch233
-version: 0.0.2
+version: 0.1.0
 
 permissions:
   HuHo.command.bind:
@@ -13,3 +13,7 @@ commands:
     permission: HuHo.command.bind
     description: "HuHo Bot绑定群聊"
     usage: /bind <code>
+  huho:
+    permission: HuHo.command.bind
+    description: "HuHo bot主命令"
+    usage: /huho <reload|reconnect>
