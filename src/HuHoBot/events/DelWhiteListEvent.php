@@ -12,8 +12,13 @@ class DelWhiteListEvent extends Event{
 	}
 
 	function onReceive(string $packId, array $data) : void{
-		//TODO
-		$server = Server::getInstance();
-		$this->getPlugin()->sendResponse("[W.I.P]本适配器暂不支持此功能\n服务端".$server->getName()." v".$server->getPocketMineVersion(), $data['groupId'] ?? [], 'success', $packId);
+		$name = $data['xboxid'];
+		$response = "玩家 $name 不在白名单内!";
+		if(Server::getInstance()->getWhitelisted()->exists($name, true)){
+			Server::getInstance()->removeWhitelist($name);
+			$response = "成功从白名单内移除玩家 $name";
+		}
+
+		$this->getPlugin()->sendResponse($response, $data['groupId'] ?? [], 'success', $packId);
 	}
 }

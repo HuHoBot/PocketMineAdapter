@@ -12,8 +12,11 @@ class QueryWhiteListEvent extends Event{
 	}
 
 	function onReceive(string $packId, array $data) : void{
-		//TODO
-		$server = Server::getInstance();
-		$this->getPlugin()->sendMessage('queryWl', ['list' => "[W.I.P]本适配器暂不支持此功能\n服务端".$server->getName()." v".$server->getPocketMineVersion()], $packId);
+		$name = $data['key'] ?? (string) $data['page'] ?? "";
+		$response = "玩家 $name 不在白名单内!";
+		if(Server::getInstance()->getWhitelisted()->exists($name, true)){
+			$response = "玩家 $name 在白名单内!";
+		}
+		$this->getPlugin()->sendMessage('queryWl', ['list' => $response], $packId);
 	}
 }
