@@ -20,6 +20,7 @@ use pocketmine\snooze\SleeperHandlerEntry;
 use pocketmine\utils\Config;
 use pocketmine\utils\TextFormat;
 use Ramsey\Uuid\Uuid;
+use function count;
 use function hrtime;
 use function json_encode;
 use function str_replace;
@@ -132,6 +133,19 @@ class Main extends PluginBase implements Listener {
 						$sender->sendMessage(TextFormat::RED."绑定校验码错误");
 					}
 					return true;
+				}
+				break;
+			case 'huho':
+				if(count($args) == 1){
+					if($args[0] == 'reload'){
+						$sender->sendMessage(TextFormat::GREEN."reload成功");
+						$this->reloadConfig();
+						return true;
+					}elseif($args[0] == 'reconnect'){
+						$sender->sendMessage(TextFormat::GREEN."正在重连...");
+						$this->reConnect();
+						return true;
+					}
 				}
 				break;
 		}
