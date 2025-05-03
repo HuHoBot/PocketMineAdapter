@@ -9,5 +9,9 @@ hashKey: ~
 serverName: PocketMine-MP Server
 # MOTD服务器地址
 # 格式: 地址:端口 (示例: play.easecation.net:19132)
-motdUrl: play.easecation.net:19132
+motdUrl: play.easecation.net:19132duo
+# 启用群聊消息互通
+enableGroupChat: false
+# 群聊消息格式 (可用变量: {nick}, {msg})
+chatFormatGroup: 群:<{nick}> {msg}
 ...

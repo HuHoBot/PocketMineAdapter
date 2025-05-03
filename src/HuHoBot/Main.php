@@ -4,6 +4,7 @@ namespace HuHoBot;
 
 use HuHoBot\events\AddWhiteListEvent;
 use HuHoBot\events\BindRequestEvent;
+use HuHoBot\events\ChatEvent;
 use HuHoBot\events\DelWhiteListEvent;
 use HuHoBot\events\Event;
 use HuHoBot\events\QueryOnlineEvent;
@@ -56,6 +57,7 @@ class Main extends PluginBase implements Listener {
 		$this->registerEvent(new RunCommandEvent());
 		$this->registerEvent(new RunCustomCommandEvent());
 		$this->registerEvent(new ShutdownEvent());
+		$this->registerEvent(new ChatEvent());
 
 		//连接和握手
 		$this->sleeper = $this->getServer()->getTickSleeper()->addNotifier(fn() => $this->onTextReceived());
