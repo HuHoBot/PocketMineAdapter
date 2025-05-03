@@ -12,6 +12,7 @@ use HuHoBot\events\RunCommandEvent;
 use HuHoBot\events\RunCustomCommandEvent;
 use HuHoBot\events\SendConfigEvent;
 use HuHoBot\events\ShakedEvent;
+use HuHoBot\events\ShutdownEvent;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
@@ -54,6 +55,7 @@ class Main extends PluginBase implements Listener {
 		$this->registerEvent(new QueryWhiteListEvent());
 		$this->registerEvent(new RunCommandEvent());
 		$this->registerEvent(new RunCustomCommandEvent());
+		$this->registerEvent(new ShutdownEvent());
 
 		//连接和握手
 		$this->sleeper = $this->getServer()->getTickSleeper()->addNotifier(fn() => $this->onTextReceived());
