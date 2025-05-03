@@ -22,7 +22,7 @@ class RunCommandSender extends ConsoleCommandSender{
 		}
 
 		foreach(explode("\n", trim($message)) as $line){
-			$this->result .= TextFormat::clean($line);
+			$this->result .= TextFormat::clean($line)."\n";
 		}
 	}
 

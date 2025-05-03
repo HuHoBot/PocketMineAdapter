@@ -13,7 +13,6 @@ class QueryOnlineEvent extends Event{
 	}
 
 	function onReceive(string $packId, array $data) : void{
-		var_dump($data);
 		$server = Server::getInstance();
 		$players = $server->getOnlinePlayers();
 		$onlinePlayers = '';
