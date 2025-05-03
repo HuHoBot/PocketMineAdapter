@@ -17,10 +17,7 @@
 
 ## 插件特点
 > [!NOTE]  
-> 本插件还处于开发阶段，暂不支持自动重连<br>
-> 如需要，请通过`/huho reconnect`手动重连
-> 
-> 命令回调和消息互通也在制作中...
+> 自定义命令还在制作中...
 > 
 - 使用多线程处理网络io，防止网络卡顿阻塞主线程
 - events系统分类每一种功能的处理
@@ -29,12 +26,15 @@
 - [x] 握手
 - [x] 绑定
 - [x] 查询在线
-- [ ] 消息互通
+- [x] 消息互通
 - [x] 服务器命令
 - [ ] 自定义命令
 - [x] 白名单操作
 
 ## ⚙️ 配置示例
+- `/huho reload` 重载配置文件
+- `/huho reconnect` 手动重新连接机器人
+
 
 ```yaml
 ---
@@ -48,7 +48,11 @@ hashKey: ~
 serverName: PocketMine-MP Server
 # MOTD服务器地址
 # 格式: 地址:端口 (示例: play.easecation.net:19132)
-motdUrl: play.easecation.net:19132
+motdUrl: play.easecation.net:19132duo
+# 启用群聊消息互通
+enableGroupChat: false
+# 群聊消息格式 (可用变量: {nick}, {msg})
+chatFormatGroup: 群:<{nick}> {msg}
 ...
 
 ```
