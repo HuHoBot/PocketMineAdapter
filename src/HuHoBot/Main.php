@@ -66,6 +66,10 @@ class Main extends PluginBase implements Listener {
 		$this->getScheduler()->scheduleRepeatingTask(new HeartBeatTask($this), 20 * 3); //协议是5s，为了低tps情况计时考虑
 	}
 
+	public function isConnected() : bool{
+		return $this->ws->isConnected();
+	}
+
 	public function reConnect() : void{
 		$this->ws->send(WebSocketThread::COMMAND_RECONNECT); //HACK！
 		$this->shakeHand();

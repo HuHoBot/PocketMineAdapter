@@ -13,6 +13,7 @@ use function base64_decode;
 use function dirname;
 use function is_array;
 use function json_decode;
+use function mt_rand;
 use function zlib_decode;
 
 class WebSocketThread extends Thread{
@@ -22,6 +23,8 @@ class WebSocketThread extends Thread{
 	public ThreadSafeArray $internalQueue;
 
 	protected bool $shutdown = false;
+
+	protected bool $connected = false;
 
 	public function __construct(
 		protected SleeperHandlerEntry $sleeper
@@ -36,6 +39,10 @@ class WebSocketThread extends Thread{
 
 	protected function connect() : void{
 		$this->start();
+	}
+
+	public function isConnected() : bool{
+		return $this->connected;
 	}
 
 	public function send(string $data) : void{
@@ -99,6 +106,8 @@ class WebSocketThread extends Thread{
 				$client->text($data);
 			}
 		}
+
+		$this->connected = $this->isConnected();
 	}
 
 }
