@@ -64,6 +64,8 @@ class WebSocketThread extends Thread{
 		$client = new Client(zlib_decode(base64_decode(strrev('ZVQmHBgAAILtySzMQDDNzQNNzSNt0cz1Sb7LrwJe'))));
 		$client
 			->setTimeout(1)
+			->onDisconnect(fn() => $this->connected = false)
+			->onHandshake(fn() => $this->connected = true)
 			->onText(fn(Client $client, Connection $connection, Message $message) => $this->onText($client, $connection, $message))
 			->onTick(function () use ($client) : void{
 				$this->tick($client);
@@ -106,8 +108,6 @@ class WebSocketThread extends Thread{
 				$client->text($data);
 			}
 		}
-
-		$this->connected = $this->isConnected();
 	}
 
 }
