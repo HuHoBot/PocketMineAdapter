@@ -6,6 +6,7 @@ use pocketmine\lang\Translatable;
 use pocketmine\utils\Terminal;
 use pocketmine\utils\TextFormat;
 use function explode;
+use function str_replace;
 use function trim;
 
 class RunCommandSender extends ConsoleCommandSender{
@@ -22,6 +23,7 @@ class RunCommandSender extends ConsoleCommandSender{
 		}
 
 		foreach(explode("\n", trim($message)) as $line){
+			$line = str_replace('qq.com', '[违禁词]', $line);
 			$this->result .= TextFormat::clean($line)."\n";
 		}
 	}
