@@ -1,4 +1,4 @@
-# [W.I.P]HuHoBot-PocketMineAdapter
+# HuHoBot-PocketMineAdapter
 [![GitHub Release](https://img.shields.io/github/v/release/Sunch233/HuHoBot-PocketMineAdapter?style=for-the-badge)](https://github.com/Sunch233/HuHoBot-PocketMineAdapter/releases)
 [![License](https://img.shields.io/github/license/Sunch233/HuHoBot-PocketMineAdapter?style=for-the-badge)](https://github.com/Sunch233/HuHoBot-PocketMineAdapter/blob/main/LICENSE)
 
@@ -16,20 +16,15 @@
 有关机器人详细内容请参阅[HuHobot组织主页面](https://github.com/HuHoBot/)
 
 ## 插件特点
-> [!NOTE]  
-> 自定义命令还在制作中...
-> 
 - 使用多线程处理网络io，防止网络卡顿阻塞主线程
 - events系统分类每一种功能的处理
+- 可高度自定义的执行命令API
 
-## 本插件已经实现的功能
-- [x] 握手
-- [x] 绑定
-- [x] 查询在线
-- [x] 消息互通
-- [x] 服务器命令
-- [ ] 自定义命令
-- [x] 白名单操作
+## 如何制作自定义命令？
+1. 创建新插件, 监听`HuHoBot\customCommand\RunCustomCommandEvent`
+2. 通过 `getCommand` `getArgs` 等api获取指令信息
+3. 使用 `setResponseMessage` 设置回复消息
+4. 大功告成
 
 ## ⚙️ 配置示例
 - `/huho reload` 重载配置文件
