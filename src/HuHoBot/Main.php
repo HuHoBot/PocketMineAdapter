@@ -10,6 +10,7 @@ use HuHoBot\events\Event;
 use HuHoBot\events\QueryOnlineEvent;
 use HuHoBot\events\QueryWhiteListEvent;
 use HuHoBot\events\RunCommandEvent;
+use HuHoBot\events\RunCustomAdminCommandEvent;
 use HuHoBot\events\RunCustomCommandEvent;
 use HuHoBot\events\SendConfigEvent;
 use HuHoBot\events\ShakedEvent;
@@ -58,6 +59,7 @@ class Main extends PluginBase implements Listener {
 		$this->registerEvent(new RunCustomCommandEvent());
 		$this->registerEvent(new ShutdownEvent());
 		$this->registerEvent(new ChatEvent());
+		$this->registerEvent(new RunCustomAdminCommandEvent());
 
 		//连接和握手
 		$this->sleeper = $this->getServer()->getTickSleeper()->addNotifier(fn() => $this->onTextReceived());

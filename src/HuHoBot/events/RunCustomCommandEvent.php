@@ -2,17 +2,37 @@
 
 namespace HuHoBot\events;
 
+use HuHoBot\customCommand\CustomCommandSender;
+use pocketmine\plugin\Plugin;
 use pocketmine\Server;
+use HuHoBot\customCommand\RunCustomCommandEvent as pmRunCustomCommandEvent;
 
 class RunCustomCommandEvent extends Event{
 
-	function getHeaderType() : string{
+	public function getHeaderType() : string{
 		return 'run';
 	}
 
 	function onReceive(string $packId, array $data) : void{
-		//TODO
-		$server = Server::getInstance();
-		$this->getPlugin()->sendResponse("[W.I.P]本适配器暂不支持此功能\n服务端".$server->getName()." v".$server->getPocketMineVersion(), $data['groupId'] ?? [], 'success', $packId);
+		$sender = new CustomCommandSender(
+			$data['author']['bindNick'],
+			$data['author']['qlogoUrl'],
+			$data['author']['openId'],
+			$data['group']['openId'],
+		);
+
+		$event = new pmRunCustomCommandEvent(
+			$data['key'],
+			$data['runParams'],
+			$this->isAdminCommand(),
+			$sender
+		);
+		$event->call();
+
+		$this->getPlugin()->sendResponse($event->getResponseMessage(), $data['groupId'] ?? [], 'success', $packId);
+	}
+
+	public function isAdminCommand() : bool{
+		return false;
 	}
 }
