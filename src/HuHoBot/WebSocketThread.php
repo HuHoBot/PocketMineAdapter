@@ -69,8 +69,11 @@ class WebSocketThread extends Thread{
 			->onText(fn(Client $client, Connection $connection, Message $message) => $this->onText($client, $connection, $message))
 			->onTick(function () use ($client) : void{
 				$this->tick($client);
-			})
-			->start();
+			});
+
+		while(!$this->shutdown){
+			$client->start();
+		}
 	}
 
 	/**
@@ -81,7 +84,8 @@ class WebSocketThread extends Thread{
 			$data = json_decode($message->getContent(), true);
 		}catch(\Throwable $e){
 			\GlobalLogger::get()->logException($e);
-			//TODO 重新连接
+			$client->disconnect();
+			$client->stop();
 		}finally{
 			if(is_array($data)){
 				$this->externalQueue[] = new NonThreadSafeValue($data);
@@ -103,7 +107,7 @@ class WebSocketThread extends Thread{
 			$data = $this->internalQueue->shift();
 			if($data === self::COMMAND_RECONNECT){
 				$client->disconnect();
-				$client->connect();
+				$client->stop();//在主循环处自动重启
 			}else{
 				$client->text($data);
 			}
