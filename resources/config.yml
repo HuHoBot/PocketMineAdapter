@@ -14,4 +14,8 @@ motdUrl: play.easecation.net:19132duo
 enableGroupChat: false
 # 群聊消息格式 (可用变量: {nick}, {msg})
 chatFormatGroup: 群:<{nick}> {msg}
+# 游戏消息格式 (可用变量: {name}, {msg})
+chatFormatGame: <{name}> {msg}
+#  游戏消息转发前缀
+chatFormatGamePrefix: '#'
 ...

@@ -15,9 +15,11 @@ use HuHoBot\events\RunCustomCommandEvent;
 use HuHoBot\events\SendConfigEvent;
 use HuHoBot\events\ShakedEvent;
 use HuHoBot\events\ShutdownEvent;
+use HuHoBot\onChatListener;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerChatEvent;
 use pocketmine\plugin\PluginBase;
 use pocketmine\snooze\SleeperHandlerEntry;
 use pocketmine\utils\Config;
@@ -46,6 +48,9 @@ class Main extends PluginBase implements Listener {
 			$this->getConfig()->set('serverId', str_replace("-", '', $this->getServer()->getServerUniqueId()->toString()));
 			$this->saveConfig();
 		}
+
+        //注册事件
+        $this->getServer()->getPluginManager()->registerEvents(new onChatListener($this), $this);
 
 		//网络事件注册
 		$this->registerEvent(new ShakedEvent());
