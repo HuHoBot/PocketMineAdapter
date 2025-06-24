@@ -33,6 +33,8 @@
 
 ```yaml
 ---
+# 是否安全连接（连不上服务器可选择关闭）
+safeConnect: true
 # 服务器唯一ID (启动时自动生成)
 # ! 请勿手动修改，留空即可
 serverId: ~
@@ -48,6 +50,10 @@ motdUrl: play.easecation.net:19132duo
 enableGroupChat: false
 # 群聊消息格式 (可用变量: {nick}, {msg})
 chatFormatGroup: 群:<{nick}> {msg}
+# 游戏消息格式 (可用变量: {name}, {msg})
+chatFormatGame: <{name}> {msg}
+#  游戏消息转发前缀
+chatFormatGamePrefix: '#'
 ...
 
 ```
