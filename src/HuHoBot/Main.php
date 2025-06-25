@@ -68,8 +68,7 @@ class Main extends PluginBase implements Listener {
 
 		//连接和握手
 		$this->sleeper = $this->getServer()->getTickSleeper()->addNotifier(fn() => $this->onTextReceived());
-		$safeConnect = (bool) $this->getConfig()->get('safeConnect');
-		$this->ws = new WebSocketThread($this->sleeper, $safeConnect);
+		$this->ws = new WebSocketThread($this->sleeper);
 		$this->ws->start();
 
 		$this->shakeHand();
