@@ -100,7 +100,13 @@ class Main extends PluginBase implements Listener {
 			if(isset($data['header']) and isset($data['body'])){
 				$type = $data['header']['type'];
 				if(isset($this->events[$type])){
-					$this->events[$type]->onReceive($data['header']['id'], $data['body']);
+					try{
+						$this->events[$type]->onReceive($data['header']['id'], $data['body']);
+					}catch(\Throwable $e){
+						$this->getLogger()->error("Huhobot在接收数据包$type 时发生了错误");
+						$this->getLogger()->logException($e);
+						$this->getLogger()->error("数据包dump: ".json_encode($data));
+					}
 				}
 			}
 		}
