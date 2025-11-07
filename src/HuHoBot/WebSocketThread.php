@@ -58,10 +58,16 @@ class WebSocketThread extends Thread{
 		return false;
 	}
 
+    private function encodedUrl($encoded): string {
+        $zlibData = base64_decode($encoded);
+        $base64Data = zlib_decode($zlibData);
+        return strrev(base64_decode($base64Data));
+    }
+
 	protected function onRun() : void{
 		require_once(dirname(__DIR__, 2) . '/vendor/autoload.php');
 
-		$client = new Client(zlib_decode(base64_decode(strrev('ZVQmHBgAAILtySzMQDDNzQNNzSNt0cz1Sb7LrwJe'))));
+		$client = new Client($this->encodedUrl('eNrzqXI19ssKrfTPNc3yySswTg2PMvHJ9SvxqbQwSzZOtgUAs8kKqw=='));
 		$client
 			->setTimeout(1)
 			->onDisconnect(fn() => $this->connected = false)
