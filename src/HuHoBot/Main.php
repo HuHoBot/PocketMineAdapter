@@ -29,7 +29,6 @@ use function count;
 use function hrtime;
 use function json_encode;
 use function str_replace;
-use function var_dump;
 
 class Main extends PluginBase implements Listener {
 	public WebSocketThread $ws;
@@ -68,20 +67,23 @@ class Main extends PluginBase implements Listener {
 
 		//连接和握手
 		$this->sleeper = $this->getServer()->getTickSleeper()->addNotifier(fn() => $this->onTextReceived());
-		$this->ws = new WebSocketThread($this->sleeper);
+		$this->ws = new WebSocketThread(
+			$this->sleeper,
+			$this->getConfig()->get('serverId'),
+			$this->getConfig()->get('hashKey', null),
+			$this->getConfig()->get('serverName')
+		);
 		$this->ws->start();
 
-		$this->shakeHand();
 		$this->getScheduler()->scheduleRepeatingTask(new HeartBeatTask($this), 20 * 3); //协议是5s，为了低tps情况计时考虑
-	}
-
-	public function isConnected() : bool{
-		return $this->ws->isConnected();
 	}
 
 	public function reConnect() : void{
 		$this->ws->send(WebSocketThread::COMMAND_RECONNECT); //HACK！
-		$this->shakeHand();
+	}
+
+	public function isConnected() : bool{
+		return $this->ws->isConnected();
 	}
 
 	public function onDisable() : void{
@@ -113,7 +115,15 @@ class Main extends PluginBase implements Listener {
 	}
 
 	public function sendResponse(string $msg, array $groupId, string $type, ?string $packId = null) : void{
-		$this->sendMessage($type, ['msg' => $msg, 'group' => $groupId], $packId);
+		$this->sendMessage(
+			$type,
+			[
+				'msg' => $msg,
+				'callbackConvert' => 0,
+				'group' => $groupId
+			],
+			$packId
+		);
 	}
 
 	public function sendMessage(string $type, array $body, ?string $packId = null) : void{
@@ -130,16 +140,6 @@ class Main extends PluginBase implements Listener {
 		];
 
 		$this->ws->send(json_encode($data));
-	}
-
-	private function shakeHand() : void{
-		$this->sendMessage('shakeHand', [
-			'serverId' => $this->getConfig()->get('serverId'),
-			'hashKey' => $this->getConfig()->get('hashKey', null),
-			'name' => $this->getConfig()->get('serverName'),
-			'version' => "1.0.0", //需要硬编码 //$this->getDescription()->getVersion(),
-			'platform' => 'pmmp'
-		]);
 	}
 
 	public function onCommand(CommandSender $sender, Command $command, string $label, array $args) : bool{
@@ -162,7 +162,7 @@ class Main extends PluginBase implements Listener {
 						$sender->sendMessage(TextFormat::GREEN."reload成功");
 						$this->reloadConfig();
 						return true;
-					}elseif($args[0] == 'reconnect'){
+					}elseif($args[0] == 'reconnect' or $args[0] == 'rc'){
 						$sender->sendMessage(TextFormat::GREEN."正在重连...");
 						$this->reConnect();
 						return true;

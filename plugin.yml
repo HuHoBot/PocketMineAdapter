@@ -2,7 +2,7 @@ name: HuHoBot
 api: 5.0.0
 main: HuHoBot\Main
 author: Sunch233
-version: 1.0.3
+version: 1.0.4
 
 permissions:
   HuHo.command.bind:
