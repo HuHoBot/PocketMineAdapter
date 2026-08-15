@@ -18,5 +18,6 @@ abstract class Event{
 
 	abstract function getHeaderType() : string;
 
+	/** @param array<string, mixed> $data */
 	abstract function onReceive(string $packId, array $data) : void;
 }

@@ -13,23 +13,28 @@ class RunCustomCommandEvent extends Event{
 		return 'run';
 	}
 
+	/** @param array<string, mixed> $data */
 	function onReceive(string $packId, array $data) : void{
-		$sender = new CustomCommandSender(
-			$data['author']['bindNick'] ?? "error bindNick",
-			$data['author']['qlogoUrl'] ?? "error qlogoUrl",
-			$data['author']['openId'] ?? "error author openId",
-			$data['group']['openId'] ?? "error group openId",
-		);
+		$sender = CustomCommandSender::fromProtocolData($data);
+		$command = $data['key'] ?? null;
+		$runParams = $data['runParams'] ?? null;
+		if(!is_string($command) || !is_array($runParams)){
+			$this->getPlugin()->getLogger()->warning('自定义命令数据缺少 key 或 runParams');
+			return;
+		}
 
 		$event = new pmRunCustomCommandEvent(
-			$data['key'],
-			$data['runParams'],
+			$command,
+			$runParams,
 			$this->isAdminCommand(),
-			$sender
+			$sender,
+			$data,
+			$packId
 		);
 		$event->call();
 
-		$this->getPlugin()->sendResponse($event->getResponseMessage(), $data['groupId'] ?? [], 'success', $packId);
+		$groupId = $data['groupId'] ?? [];
+		$this->getPlugin()->sendResponse($event->getResponseMessage(), is_array($groupId) ? $groupId : [], 'success', $packId);
 	}
 
 	public function isAdminCommand() : bool{

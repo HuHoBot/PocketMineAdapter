@@ -7,6 +7,7 @@ use HuHoBot\events\BindRequestEvent;
 use HuHoBot\events\ChatEvent;
 use HuHoBot\events\DelWhiteListEvent;
 use HuHoBot\events\Event;
+use HuHoBot\events\GroupMemberEvent;
 use HuHoBot\events\QueryOnlineEvent;
 use HuHoBot\events\QueryWhiteListEvent;
 use HuHoBot\events\RunCommandEvent;
@@ -64,6 +65,7 @@ class Main extends PluginBase implements Listener {
 		$this->registerEvent(new ShutdownEvent());
 		$this->registerEvent(new ChatEvent());
 		$this->registerEvent(new RunCustomAdminCommandEvent());
+		$this->registerEvent(new GroupMemberEvent());
 
 		//连接和握手
 		$this->sleeper = $this->getServer()->getTickSleeper()->addNotifier(fn() => $this->onTextReceived());
@@ -72,7 +74,8 @@ class Main extends PluginBase implements Listener {
 			$this->sleeper,
 			$this->getConfig()->get('serverId'),
 			$this->getConfig()->get('hashKey', null),
-			$this->getConfig()->get('serverName')
+			$this->getConfig()->get('serverName'),
+			$this->getConfig()->get('connectUrl')
 		);
 		$this->ws->start();
 

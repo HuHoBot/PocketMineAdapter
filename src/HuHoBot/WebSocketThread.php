@@ -18,7 +18,6 @@ use Throwable;
 class WebSocketThread extends Thread{
 	public const COMMAND_RECONNECT = "##--reconnect--##@123";
 
-	private const ENDPOINT = "eNrzqXI19ssKrfTPNc3yySswTg2PMvHJ9SvxqbQwSzZOtgUAs8kKqw==";
 	private const RECONNECT_DELAY = 3;
 	private const LOOP_WAIT_MICROSECONDS = 10000;
 	private const MAX_OUTBOUND_PACKETS = 1024;
@@ -37,7 +36,8 @@ class WebSocketThread extends Thread{
 		protected SleeperHandlerEntry $sleeper,
 		protected string $serverId,
 		protected ?string $hashKey,
-		protected string $serverName
+		protected string $serverName,
+		protected string $connectUrl
 	){
 		$this->externalQueue = new ThreadSafeArray();
 		$this->internalQueue = new ThreadSafeArray();
@@ -83,7 +83,7 @@ class WebSocketThread extends Thread{
 		$notifier = $this->sleeper->createNotifier();
 		try{
 			$connection = new WebSocketConnection(
-				$this->decodeEndpoint(self::ENDPOINT),
+				$this->connectUrl,
 				function(string $payload) use ($notifier) : void{
 					$this->onText($notifier, $payload);
 				},
@@ -146,6 +146,11 @@ class WebSocketThread extends Thread{
 				}
 				$pending = $packet;
 			}
+			if($pending === self::COMMAND_RECONNECT){
+				$pending = null;
+				$connection->reconnect();
+				return;
+			}
 
 			if(!$connection->sendText($pending)){
 				return;
@@ -164,6 +169,7 @@ class WebSocketThread extends Thread{
 		if(!is_array($data)){
 			return;
 		}
+		/** @var array<string, mixed> $data */
 
 		if(count($this->externalQueue) >= self::MAX_INBOUND_PACKETS){
 			$this->externalQueue->shift();
@@ -187,16 +193,6 @@ class WebSocketThread extends Thread{
 				"platform" => "pmmp"
 			]
 		], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
-	}
-
-	private function decodeEndpoint(string $encoded) : string{
-		$compressed = base64_decode($encoded, true);
-		$reversedBase64 = $compressed !== false ? zlib_decode($compressed) : false;
-		$url = is_string($reversedBase64) ? base64_decode($reversedBase64, true) : false;
-		if(!is_string($url)){
-			throw new RuntimeException("内置 WebSocket 地址无法解码");
-		}
-		return strrev($url);
 	}
 
 	private function log(string $level, string $message) : void{

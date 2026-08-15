@@ -16,7 +16,6 @@
 有关机器人详细内容请参阅[HuHobot组织主页面](https://github.com/HuHoBot/)
 
 ## 插件特点
-- 内置轻量 RFC 6455 WebSocket 客户端，无需安装 Composer 依赖
 - 使用独立线程处理网络 IO，防止网络卡顿阻塞主线程
 - events系统分类每一种功能的处理
 - 可高度自定义的执行命令API
@@ -27,28 +26,12 @@
 3. 使用 `setResponseMessage` 设置回复消息
 4. 大功告成
 
-## ⚙️ 配置示例
-- `/huho reload` 重载配置文件
-- `/huho reconnect` 手动重新连接机器人
+QQ 群成员变动也会发布该事件。`getCommand()` 为 `#MemberAdd` 或 `#MemberRemove`，`getData()` 可获取完整协议 body，`getPackId()` 可获取消息 ID。
 
+## 如何使用
 
-```yaml
----
-# 服务器唯一ID (启动时自动生成)
-# ! 请勿手动修改，留空即可
-serverId: ~
-# 通信加密密钥 (绑定后自动获取)
-# ! 请勿手动修改，留空即可
-hashKey: ~
-# 服务器显示名称
-serverName: PocketMine-MP Server
-# MOTD服务器地址
-# 格式: 地址:端口 (示例: play.easecation.net:19132)
-motdUrl: play.easecation.net:19132duo
-# 启用群聊消息互通
-enableGroupChat: false
-# 群聊消息格式 (可用变量: {nick}, {msg})
-chatFormatGroup: 群:<{nick}> {msg}
-...
-
-```
+- 扔到你的各种兼容pm api5的pmmp分支版本的plugin文件夹里
+- 启动一次服务端生成配置文件，文件夹`HuHoBot`
+- 更改配置文件，定义ws后端地址，motd服务(可选)等等
+- 跟随提示绑定
+- 正常使用

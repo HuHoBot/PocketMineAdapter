@@ -5,11 +5,30 @@ serverId: ~
 # 通信加密密钥 (绑定后自动获取)
 # ! 请勿手动修改，留空即可
 hashKey: ~
+# WebSocket 连接地址
+# 自建服务可替换为完整的 ws:// 地址，修改后需重启插件或服务器
+connectUrl: ws://mc.xfywz.cn:25671
 # 服务器显示名称
 serverName: PocketMine-MP Server
-# MOTD服务器地址
-# 格式: 地址:端口 (示例: play.easecation.net:19132)
-motdUrl: play.easecation.net:19132duo
+# QQ 端在线查询/MOTD 显示
+motd:
+  server_ip: play.easecation.net
+  server_port: 19132
+  api: https://motdbe.blackbe.work/status_img?host={server_ip}:{server_port}
+  text: 共{online}人在线
+  output_online_list: true
+  post_img: true
+  markdown: true
+  # 启用后会读取插件数据目录下的 online.md
+  customMarkdown: false
+# 玩家进退服消息推送到 QQ
+postEvent:
+  onJoin:
+    enable: false
+    formatString: 玩家 {playerName} 加入了服务器
+  onLeft:
+    enable: false
+    formatString: 玩家 {playerName} 离开了服务器
 # 启用群聊消息互通
 enableGroupChat: false
 # 群聊消息格式 (可用变量: {nick}, {msg})
