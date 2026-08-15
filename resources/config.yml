@@ -7,7 +7,7 @@ serverId: ~
 hashKey: ~
 # WebSocket 连接地址
 # 自建服务可替换为完整的 ws:// 地址，修改后需重启插件或服务器
-connectUrl: ws://mc.xfywz.cn:25671
+connectUrl: ws://127.0.0.1:12345
 # 服务器显示名称
 serverName: PocketMine-MP Server
 # QQ 端在线查询/MOTD 显示
