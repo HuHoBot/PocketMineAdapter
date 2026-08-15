@@ -12,9 +12,10 @@ Desktop.ini
 /docs/build/
 !/docs/requirements.txt
 
-# Composer
-vendor/*
-
 # php-cs-fixer
 /.php_cs.cache
 /.php-cs-fixer.cache
+
+# Common IDEs
+.idea/*
+nbproject/*

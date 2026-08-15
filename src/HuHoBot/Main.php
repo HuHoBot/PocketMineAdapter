@@ -88,8 +88,8 @@ class Main extends PluginBase implements Listener {
 
 	public function onDisable() : void{
 		$this->handShaked = false;
+		$this->ws->quit();
 		$this->getServer()->getTickSleeper()->removeNotifier($this->sleeper->getNotifierId());
-		$this->ws->shutdown();
 	}
 
 	public function registerEvent(Event $e){

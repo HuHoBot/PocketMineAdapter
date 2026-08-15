@@ -1,28 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace HuHoBot;
 
+use JsonException;
 use pmmp\thread\ThreadSafeArray;
 use pocketmine\snooze\SleeperHandlerEntry;
+use pocketmine\snooze\SleeperNotifier;
 use pocketmine\thread\NonThreadSafeValue;
 use pocketmine\thread\Thread;
-use pocketmine\utils\UUID;
+use Ramsey\Uuid\Uuid;
+use RuntimeException;
 use Throwable;
-use WebSocket\Client;
-use WebSocket\Connection;
-use WebSocket\Message\Message;
-use function base64_decode;
-use function dirname;
-use function is_array;
-use function json_decode;
 
 class WebSocketThread extends Thread{
 	public const COMMAND_RECONNECT = "##--reconnect--##@123";
 
-	public ThreadSafeArray $externalQueue;
-	public ThreadSafeArray $internalQueue;
+	private const ENDPOINT = "eNrzqXI19ssKrfTPNc3yySswTg2PMvHJ9SvxqbQwSzZOtgUAs8kKqw==";
+	private const RECONNECT_DELAY = 3;
+	private const LOOP_WAIT_MICROSECONDS = 10000;
+	private const MAX_OUTBOUND_PACKETS = 1024;
+	private const MAX_INBOUND_PACKETS = 4096;
+	private const MAX_PACKET_BYTES = 8 * 1024 * 1024;
 
-	protected bool $shutdown = false;
+	/** @phpstan-var ThreadSafeArray<int, NonThreadSafeValue<array<string, mixed>>> */
+	public ThreadSafeArray $externalQueue;
+	/** @phpstan-var ThreadSafeArray<int, string> */
+	public ThreadSafeArray $internalQueue;
 
 	protected bool $connected = false;
 
@@ -36,123 +41,172 @@ class WebSocketThread extends Thread{
 		$this->internalQueue = new ThreadSafeArray();
 	}
 
-	public function shutdown() : void{
-		$this->shutdown = true;
-	}
-
-	protected function connect() : void{
-		$this->start();
-	}
-
 	public function isConnected() : bool{
-		return $this->connected;
+		return $this->connected && $this->isRunning();
 	}
 
 	public function send(string $data) : void{
-		$this->internalQueue[] = $data;
-	}
-
-	public function receive() : array|false{
-		/** @var ?NonThreadSafeValue $data */
-		$data = $this->externalQueue->shift();
-		if($data !== null){
-			return $data->deserialize();
+		if(strlen($data) > self::MAX_PACKET_BYTES){
+			\GlobalLogger::get()->warning("[HuHoBot] 待发送数据超过 8 MiB 安全限制，已丢弃");
+			return;
 		}
-		return false;
+
+		$queued = $this->synchronized(function() use ($data) : bool{
+			if($this->isKilled || count($this->internalQueue) >= self::MAX_OUTBOUND_PACKETS){
+				return false;
+			}
+			$this->internalQueue[] = $data;
+			$this->notify();
+			return true;
+		});
+		if(!$queued){
+			\GlobalLogger::get()->warning("[HuHoBot] WebSocket 发送队列已满或线程已停止，数据未发送");
+		}
 	}
 
-	private function encodedUrl($encoded): string {
-		$zlibData = base64_decode($encoded);
-		$base64Data = zlib_decode($zlibData);
-		return strrev(base64_decode($base64Data));
+	/** @return array<string, mixed>|false */
+	public function receive() : array|false{
+		$value = $this->externalQueue->shift();
+		if(!$value instanceof NonThreadSafeValue){
+			return false;
+		}
+
+		$data = $value->deserialize();
+		return is_array($data) ? $data : false;
 	}
 
 	protected function onRun() : void{
-		require_once(dirname(__DIR__, 2) . '/vendor/autoload.php');
-		while(!$this->shutdown){
-			$client = new Client($this->encodedUrl('eNrzqXI19ssKrfTPNc3yySswTg2PMvHJ9SvxqbQwSzZOtgUAs8kKqw=='));
-			try{
-				$client
-					->setPersistent(true) //持久连接(?)
-					->setTimeout(15) //连接时超时数值
-					->onDisconnect(function() : void{
-						$this->connected = false;
-						\GlobalLogger::get()->info("[HuhoBot] 与服务器断开连接");
-					})
-					->onHandshake(function() use ($client) : void{
-						$this->connected = true;
-						\GlobalLogger::get()->info("[HuhoBot] 连接到服务器");
-						$this->shakeHand(); //握手
-						$client->setTimeout(2); //连接成功后超时数值
-					})
-					->onText(fn(Client $client, Connection $connection, Message $message) => $this->onText($client, $connection, $message))
-					->onTick(function () use ($client) : void{
-						$this->tick($client); //主循环
-					});
-
-				$client->start();
-			}catch(Throwable $e){
-				$client->disconnect();
-				\GlobalLogger::get()->logException($e);
-				\GlobalLogger::get()->notice("[HuhoBot] 机器人已经断开连接，三秒后自动重连...");
-				sleep(3);
-			}
-		}
-	}
-
-	/**
-	 * 接收数据包
-	 */
-	public function onText(Client $client, Connection $connection, Message $message) : void{
+		$notifier = $this->sleeper->createNotifier();
 		try{
-			$data = json_decode($message->getContent(), true);
-		}catch(\Throwable $e){
-			\GlobalLogger::get()->logException($e);
-			//TODO 重新连接
+			$connection = new WebSocketConnection(
+				$this->decodeEndpoint(self::ENDPOINT),
+				function(string $payload) use ($notifier) : void{
+					$this->onText($notifier, $payload);
+				},
+				static function(string $level, string $message) : void{
+					self::log($level, $message);
+				},
+				self::RECONNECT_DELAY
+			);
+		}catch(Throwable $e){
+			self::log("error", "WebSocket 初始化失败: " . $e->getMessage());
+			return;
+		}
+
+		$pending = null;
+		try{
+			while(!$this->isKilled){
+				$wasConnected = $this->connected;
+				try{
+					$connection->tick();
+				}catch(Throwable $e){
+					self::log("error", "WebSocket 网络循环发生异常: " . $e->getMessage());
+					$connection->reconnect();
+				}
+
+				$this->connected = $connection->isConnected();
+				if($this->connected && !$wasConnected){
+					try{
+						if(!$connection->sendText($this->createHandshakePacket())){
+							throw new RuntimeException("连接已在握手完成后关闭");
+						}
+					}catch(Throwable $e){
+						self::log("error", "发送 HuHoBot 握手失败: " . $e->getMessage());
+						$this->connected = false;
+						$connection->reconnect();
+					}
+				}
+
+				if($this->connected){
+					$this->drainOutboundQueue($connection, $pending);
+				}
+
+				$this->synchronized(function() : void{
+					if(!$this->isKilled){
+						$this->wait(self::LOOP_WAIT_MICROSECONDS);
+					}
+				});
+			}
 		}finally{
-			if(is_array($data)){
-				$this->externalQueue[] = new NonThreadSafeValue($data);
-				$this->sleeper->createNotifier()->wakeupSleeper(); //回调
-			}
+			$this->connected = false;
+			$connection->close();
 		}
 	}
 
-	/**
-	 * 主循环 | 发送数据包
-	 */
-	public function tick(Client $client) : void{ //1tps
-		if($this->shutdown or !$client->isConnected()){
-			$client->disconnect();
-			$client->stop();
-		}
-
-		while(count($this->internalQueue) > 0){
-			$data = $this->internalQueue->shift();
-			if($data === self::COMMAND_RECONNECT){
-				$client->disconnect();
-				$client->stop();
-			}else{
-				$client->text($data);
+	private function drainOutboundQueue(WebSocketConnection $connection, ?string &$pending) : void{
+		while($connection->isConnected()){
+			if($pending === null){
+				$packet = $this->internalQueue->shift();
+				if(!is_string($packet)){
+					return;
+				}
+				$pending = $packet;
 			}
+
+			if(!$connection->sendText($pending)){
+				return;
+			}
+			$pending = null;
 		}
 	}
 
-	private function shakeHand() : void{
-		$data = [
-			'header' => [
-				'type' => 'shakeHand',
-				'id' => str_replace("-", '', UUID::fromRandom())
+	private function onText(SleeperNotifier $notifier, string $payload) : void{
+		try{
+			$data = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+		}catch(JsonException $e){
+			self::log("warning", "收到无法解析的 JSON: " . $e->getMessage());
+			return;
+		}
+		if(!is_array($data)){
+			return;
+		}
+
+		if(count($this->externalQueue) >= self::MAX_INBOUND_PACKETS){
+			$this->externalQueue->shift();
+			self::log("warning", "WebSocket 接收队列已满");
+		}
+		$this->externalQueue[] = new NonThreadSafeValue($data);
+		$notifier->wakeupSleeper();
+	}
+
+	private function createHandshakePacket() : string{
+		return json_encode([
+			"header" => [
+				"type" => "shakeHand",
+				"id" => str_replace("-", "", Uuid::uuid4()->toString())
 			],
-			'body' => [
-				'serverId' => $this->serverId,
-				'hashKey' => $this->hashKey,
-				'name' => $this->serverName,
-				'version' => "1.0.0", //需要硬编码 //$this->getDescription()->getVersion(),
-				'platform' => 'pmmp'
+			"body" => [
+				"serverId" => $this->serverId,
+				"hashKey" => $this->hashKey,
+				"name" => $this->serverName,
+				"version" => "1.0.0",
+				"platform" => "pmmp"
 			]
-		];
-
-		$this->internalQueue[] = json_encode($data);
+		], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 	}
 
+	private function decodeEndpoint(string $encoded) : string{
+		$compressed = base64_decode($encoded, true);
+		$reversedBase64 = $compressed !== false ? zlib_decode($compressed) : false;
+		$url = is_string($reversedBase64) ? base64_decode($reversedBase64, true) : false;
+		if(!is_string($url)){
+			throw new RuntimeException("内置 WebSocket 地址无法解码");
+		}
+		return strrev($url);
+	}
+
+	private static function log(string $level, string $message) : void{
+		$logger = \GlobalLogger::get();
+		$message = "[HuHoBot] " . $message;
+		switch($level){
+			case "info":
+				$logger->info($message);
+				break;
+			case "warning":
+				$logger->warning($message);
+				break;
+			default:
+				$logger->error($message);
+		}
+	}
 }

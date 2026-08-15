@@ -16,7 +16,8 @@
 有关机器人详细内容请参阅[HuHobot组织主页面](https://github.com/HuHoBot/)
 
 ## 插件特点
-- 使用多线程处理网络io，防止网络卡顿阻塞主线程
+- 内置轻量 RFC 6455 WebSocket 客户端，无需安装 Composer 依赖
+- 使用独立线程处理网络 IO，防止网络卡顿阻塞主线程
 - events系统分类每一种功能的处理
 - 可高度自定义的执行命令API
 

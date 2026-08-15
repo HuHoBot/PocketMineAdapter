@@ -1,5 +1,0 @@
-{
-    "require": {
-        "phrity/websocket": "^3.4"
-    }
-}
