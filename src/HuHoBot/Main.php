@@ -68,6 +68,7 @@ class Main extends PluginBase implements Listener {
 		//连接和握手
 		$this->sleeper = $this->getServer()->getTickSleeper()->addNotifier(fn() => $this->onTextReceived());
 		$this->ws = new WebSocketThread(
+			$this->getServer()->getLogger(),
 			$this->sleeper,
 			$this->getConfig()->get('serverId'),
 			$this->getConfig()->get('hashKey', null),

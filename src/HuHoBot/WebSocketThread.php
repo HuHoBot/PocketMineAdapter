@@ -8,6 +8,7 @@ use JsonException;
 use pmmp\thread\ThreadSafeArray;
 use pocketmine\snooze\SleeperHandlerEntry;
 use pocketmine\snooze\SleeperNotifier;
+use pocketmine\thread\log\ThreadSafeLogger;
 use pocketmine\thread\NonThreadSafeValue;
 use pocketmine\thread\Thread;
 use Ramsey\Uuid\Uuid;
@@ -32,6 +33,7 @@ class WebSocketThread extends Thread{
 	protected bool $connected = false;
 
 	public function __construct(
+		protected ThreadSafeLogger $logger,
 		protected SleeperHandlerEntry $sleeper,
 		protected string $serverId,
 		protected ?string $hashKey,
@@ -47,7 +49,7 @@ class WebSocketThread extends Thread{
 
 	public function send(string $data) : void{
 		if(strlen($data) > self::MAX_PACKET_BYTES){
-			\GlobalLogger::get()->warning("[HuHoBot] 待发送数据超过 8 MiB 安全限制，已丢弃");
+			$this->log("warning", "待发送数据超过 8 MiB 安全限制，已丢弃");
 			return;
 		}
 
@@ -60,7 +62,7 @@ class WebSocketThread extends Thread{
 			return true;
 		});
 		if(!$queued){
-			\GlobalLogger::get()->warning("[HuHoBot] WebSocket 发送队列已满或线程已停止，数据未发送");
+			$this->log("warning", "WebSocket 发送队列已满或线程已停止，数据未发送");
 		}
 	}
 
@@ -76,6 +78,8 @@ class WebSocketThread extends Thread{
 	}
 
 	protected function onRun() : void{
+		// 与 RakLibServer 一致：让线程异常和业务日志共用主服务端 logger。
+		\GlobalLogger::set($this->logger);
 		$notifier = $this->sleeper->createNotifier();
 		try{
 			$connection = new WebSocketConnection(
@@ -83,13 +87,13 @@ class WebSocketThread extends Thread{
 				function(string $payload) use ($notifier) : void{
 					$this->onText($notifier, $payload);
 				},
-				static function(string $level, string $message) : void{
-					self::log($level, $message);
+				function(string $level, string $message) : void{
+					$this->log($level, $message);
 				},
 				self::RECONNECT_DELAY
 			);
 		}catch(Throwable $e){
-			self::log("error", "WebSocket 初始化失败: " . $e->getMessage());
+			$this->log("error", "WebSocket 初始化失败: " . $e->getMessage());
 			return;
 		}
 
@@ -100,7 +104,7 @@ class WebSocketThread extends Thread{
 				try{
 					$connection->tick();
 				}catch(Throwable $e){
-					self::log("error", "WebSocket 网络循环发生异常: " . $e->getMessage());
+					$this->log("error", "WebSocket 网络循环发生异常: " . $e->getMessage());
 					$connection->reconnect();
 				}
 
@@ -111,7 +115,7 @@ class WebSocketThread extends Thread{
 							throw new RuntimeException("连接已在握手完成后关闭");
 						}
 					}catch(Throwable $e){
-						self::log("error", "发送 HuHoBot 握手失败: " . $e->getMessage());
+						$this->log("error", "发送 HuHoBot 握手失败: " . $e->getMessage());
 						$this->connected = false;
 						$connection->reconnect();
 					}
@@ -154,7 +158,7 @@ class WebSocketThread extends Thread{
 		try{
 			$data = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
 		}catch(JsonException $e){
-			self::log("warning", "收到无法解析的 JSON: " . $e->getMessage());
+			$this->log("warning", "收到无法解析的 JSON: " . $e->getMessage());
 			return;
 		}
 		if(!is_array($data)){
@@ -163,7 +167,7 @@ class WebSocketThread extends Thread{
 
 		if(count($this->externalQueue) >= self::MAX_INBOUND_PACKETS){
 			$this->externalQueue->shift();
-			self::log("warning", "WebSocket 接收队列已满");
+			$this->log("warning", "WebSocket 接收队列已满");
 		}
 		$this->externalQueue[] = new NonThreadSafeValue($data);
 		$notifier->wakeupSleeper();
@@ -195,18 +199,7 @@ class WebSocketThread extends Thread{
 		return strrev($url);
 	}
 
-	private static function log(string $level, string $message) : void{
-		$logger = \GlobalLogger::get();
-		$message = "[HuHoBot] " . $message;
-		switch($level){
-			case "info":
-				$logger->info($message);
-				break;
-			case "warning":
-				$logger->warning($message);
-				break;
-			default:
-				$logger->error($message);
-		}
+	private function log(string $level, string $message) : void{
+		$this->logger->log($level, "[HuHoBot] " . $message);
 	}
 }
